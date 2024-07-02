@@ -10,6 +10,7 @@ import { Chat } from "./llm/chat";
 import type { LlmProvider } from "./llm/types";
 import { appendLLMOptions } from "./llm/utils";
 import { Workflow } from "./workflow/workflow";
+import { serve } from "./workflow/serve";
 
 type ClientConfig = {
   /**
@@ -442,6 +443,13 @@ export class Client {
 
   public async workflow(request: Request) {
     return await Workflow.createWorkflow(request, this);
+  }
+
+  public serve<TPayload = unknown>(
+    routeFunction: (context: Workflow<TPayload>) => Promise<void>,
+    onFinish: (workflowId: string) => unknown
+  ) {
+    return serve<TPayload>({ client: this, routeFunction, onFinish });
   }
 }
 
