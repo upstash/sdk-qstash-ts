@@ -9,6 +9,7 @@ import type { BodyInit, Event, GetEventsPayload, HeadersInit, State } from "./ty
 import { Chat } from "./llm/chat";
 import type { LlmProvider } from "./llm/types";
 import { appendLLMOptions } from "./llm/utils";
+import { Workflow } from "./workflow/workflow";
 
 type ClientConfig = {
   /**
@@ -441,6 +442,10 @@ export class Client {
         };
       }),
     };
+  }
+
+  public async workflow(request: Request) {
+    return await Workflow.createWorkflow(request, this);
   }
 }
 
