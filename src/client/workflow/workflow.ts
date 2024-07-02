@@ -125,9 +125,46 @@ export class Workflow<TInitialRequest = unknown> {
     // add result to pending and send request
     this.addResult(result);
     await this.sendPendingToQstash();
-    this.skip = true;
 
     return result;
+  }
+
+  /**
+   *
+   * @param stepName
+   * @param duration sleep duration in seconds
+   */
+  public async sleep(stepName: string, duration: number): Promise<void> {
+    this.stepCount += 1;
+
+    if (this.skip || this.stepCount < this.nonPlanStepCount) return;
+    this.addStep({
+      stepId: this.stepCount,
+      sleepFor: duration,
+      concurrent: 1,
+      targetStep: 0,
+    });
+    await this.sendPendingToQstash();
+  }
+
+  /**
+   *
+   * @param stepName
+   * @param datetime Date object to sleep until
+   */
+  public async sleepUntil(stepName: string, datetime: Date | string): Promise<void> {
+    this.stepCount += 1;
+
+    if (this.skip || this.stepCount < this.nonPlanStepCount) return;
+
+    const date = typeof datetime === "string" ? new Date(datetime) : datetime;
+    this.addStep({
+      stepId: this.stepCount,
+      sleepUntil: date.getTime(),
+      concurrent: 1,
+      targetStep: 0,
+    });
+    await this.sendPendingToQstash();
   }
 
   /**
@@ -189,7 +226,6 @@ export class Workflow<TInitialRequest = unknown> {
       }
     }
     await this.sendPendingToQstash();
-    this.skip = true;
 
     const fillValue = undefined;
     return Array.from({ length: stepFunctions.length }).fill(fillValue) as TResults;
@@ -273,6 +309,7 @@ export class Workflow<TInitialRequest = unknown> {
     for (const step of this.pendingSteps) {
       await this.submitResults(step);
     }
+    this.skip = true;
     this.pendingSteps = [];
   }
 
